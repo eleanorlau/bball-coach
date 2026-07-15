@@ -68,6 +68,7 @@ body {
 .option-grid { display: grid; gap: 10px; }
 .option-grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
 .option-grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
+.option-grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
 .option-btn {
   background: #1a1a1a;
   border: 2px solid #2a2a2a;
@@ -420,6 +421,7 @@ body {
   <div class="home-actions">
     <button class="btn btn-primary" onclick="showScreen('setup')">▶ Start Session</button>
     <button class="btn btn-secondary" onclick="showScreen('plays')">📋 Plays Library</button>
+    <button class="btn btn-secondary" onclick="showScreen('drills')">🏋️ Drills Library</button>
     <button class="btn btn-secondary" onclick="showScreen('history')">Session History</button>
   </div>
 </div>
@@ -463,6 +465,29 @@ body {
 
   <div class="setup-step">
     <div class="setup-step-label">Step 2</div>
+    <div class="setup-step-title">How much time do you have?</div>
+    <div class="option-grid cols-4" id="duration-options">
+      <button class="option-btn" onclick="selectOption('duration', 30, this)">
+        <div class="opt-icon">⏱️</div>
+        <div class="opt-label">30 min</div>
+      </button>
+      <button class="option-btn" onclick="selectOption('duration', 45, this)">
+        <div class="opt-icon">⏱️</div>
+        <div class="opt-label">45 min</div>
+      </button>
+      <button class="option-btn" onclick="selectOption('duration', 60, this)">
+        <div class="opt-icon">⏱️</div>
+        <div class="opt-label">60 min</div>
+      </button>
+      <button class="option-btn" onclick="selectOption('duration', 90, this)">
+        <div class="opt-icon">⏱️</div>
+        <div class="opt-label">90 min</div>
+      </button>
+    </div>
+  </div>
+
+  <div class="setup-step">
+    <div class="setup-step-label">Step 3</div>
     <div class="setup-step-title">Energy level today?</div>
     <div class="option-grid cols-3" id="energy-options">
       <button class="option-btn" onclick="selectOption('energy', 'low', this)">
@@ -484,7 +509,7 @@ body {
   </div>
 
   <div class="setup-step">
-    <div class="setup-step-label">Step 3</div>
+    <div class="setup-step-label">Step 4</div>
     <div class="setup-step-title">What to focus on?</div>
     <div class="option-grid cols-2" id="focus-options">
       <button class="option-btn" onclick="selectOption('focus', 'shooting', this)">
@@ -671,6 +696,48 @@ body {
   </div>
 </div>
 
+<!-- ── DRILLS LIBRARY ─────────────────────────────────────────────── -->
+<div id="screen-drills" class="screen">
+  <div class="page-header">
+    <button class="back-btn" onclick="showScreen('home')">←</button>
+    <div class="page-title">Drills Library</div>
+  </div>
+  <p style="font-size:13px;color:#666;margin-bottom:20px;line-height:1.6;">Every drill in the session generator, browsable by category. Tap one to see full instructions any time — no session required.</p>
+  <div id="drills-list"></div>
+</div>
+
+<!-- ── DRILL DETAIL (LIBRARY) ─────────────────────────────────────── -->
+<div id="screen-drill-detail" class="screen">
+  <div class="page-header">
+    <button class="back-btn" onclick="showScreen('drills')">←</button>
+    <div class="page-title" id="drilldetail-title"></div>
+  </div>
+  <div class="play-detail-pills" id="drilldetail-pills"></div>
+  <div id="drilldetail-yt"></div>
+  <div class="drill-section">
+    <div class="drill-section-label">Setup</div>
+    <div class="drill-section-body" id="drilldetail-setup"></div>
+  </div>
+  <div class="drill-section">
+    <div class="drill-section-label">How to run it</div>
+    <div class="drill-section-body" id="drilldetail-how"></div>
+  </div>
+  <div class="expandable-section">
+    <div class="expandable-header" onclick="toggleExpand('libdrill-levelup')">
+      <span>⬆️ Level Up (stronger players)</span>
+      <span class="expand-icon" id="libdrill-levelup-icon">▼</span>
+    </div>
+    <div class="expandable-body" id="libdrill-levelup-body"></div>
+  </div>
+  <div class="expandable-section" style="margin-bottom:40px;">
+    <div class="expandable-header" onclick="toggleExpand('libdrill-beginner')">
+      <span>🌱 Beginner Focus</span>
+      <span class="expand-icon" id="libdrill-beginner-icon">▼</span>
+    </div>
+    <div class="expandable-body" id="libdrill-beginner-body"></div>
+  </div>
+</div>
+
 <!-- ── HISTORY ─────────────────────────────────────────────────────── -->
 <div id="screen-history" class="screen">
   <div class="page-header">
@@ -686,6 +753,7 @@ const state = {
   players: null,
   energy: null,
   focus: null,
+  duration: null,
   session: [],
   currentBlock: 0,
   rating: null,
@@ -1007,13 +1075,25 @@ const COMPLEMENTS = {
 };
 
 // ─── SESSION GENERATOR ───────────────────────────────────────────────────────
-function generateSession(players, energy, focus) {
+// Block-type sequence for each selectable session length. Roughly:
+// warmup ~7 min, skill ~15 min, finisher ~18 min, cooldown ~5 min.
+const TIME_PLANS = {
+  30: ['warmup', 'skill', 'cooldown'],
+  45: ['warmup', 'skill', 'finisher', 'cooldown'],
+  60: ['warmup', 'skill', 'skill', 'finisher', 'cooldown'],
+  90: ['warmup', 'skill', 'skill', 'skill', 'finisher', 'cooldown']
+};
+
+function generateSession(players, energy, focus, minutes) {
   const p = parseInt(players);
   const realFocus = focus === 'random'
     ? COMPLEMENTS.random[Math.floor(Math.random() * COMPLEMENTS.random.length)]
     : focus;
+  const playsMode = focus === 'plays';
+  const complements = COMPLEMENTS[realFocus] || COMPLEMENTS.random;
+  const slots = TIME_PLANS[minutes] || TIME_PLANS[60];
 
-  function getDrill(type, focusAreas, excludeIds = []) {
+  function getDrill(type, focusAreas, excludeIds) {
     const pool = DRILLS.filter(d =>
       d.type === type &&
       d.minP <= p && d.maxP >= p &&
@@ -1031,15 +1111,28 @@ function generateSession(players, energy, focus) {
     return pool[Math.floor(Math.random() * pool.length)];
   }
 
-  const warmup = getDrill('warmup', [realFocus, 'any']);
-  const playsMode = focus === 'plays';
-  const skill1 = getDrill('skill', playsMode ? ['plays'] : [realFocus], [warmup?.id]);
-  const complements = COMPLEMENTS[realFocus] || COMPLEMENTS.random;
-  const skill2 = getDrill('skill', playsMode ? ['plays','passing'] : complements, [warmup?.id, skill1?.id]);
-  const finisher = getDrill('finisher', ['any'], []);
-  const cooldown = DRILLS.find(d => d.type === 'cooldown');
+  const usedIds = [];
+  let skillCount = 0;
+  const session = slots.map(type => {
+    let drill;
+    if (type === 'warmup') {
+      drill = getDrill('warmup', [realFocus, 'any'], usedIds);
+    } else if (type === 'skill') {
+      const focusAreas = skillCount === 0
+        ? (playsMode ? ['plays'] : [realFocus])
+        : (playsMode ? ['plays', 'passing'] : complements);
+      drill = getDrill('skill', focusAreas, usedIds);
+      skillCount++;
+    } else if (type === 'finisher') {
+      drill = getDrill('finisher', ['any'], usedIds);
+    } else {
+      drill = DRILLS.find(d => d.type === 'cooldown' && !usedIds.includes(d.id));
+    }
+    if (drill) usedIds.push(drill.id);
+    return drill;
+  });
 
-  return [warmup, skill1, skill2, finisher, cooldown].filter(Boolean);
+  return session.filter(Boolean);
 }
 
 // ─── UI HELPERS ───────────────────────────────────────────────────────────────
@@ -1059,7 +1152,7 @@ function selectOption(type, value, el) {
 
 function updateGenerateBtn() {
   const btn = document.getElementById('generate-btn');
-  const ready = state.players && state.energy && state.focus;
+  const ready = state.players && state.duration && state.energy && state.focus;
   btn.style.opacity = ready ? '1' : '0.4';
   btn.style.pointerEvents = ready ? 'auto' : 'none';
 }
@@ -1073,9 +1166,11 @@ const BLOCK_TYPES = {
 };
 
 function generateAndShowPlan() {
-  if (!state.players || !state.energy || !state.focus) return;
-  state.session = generateSession(state.players, state.energy, state.focus);
+  if (!state.players || !state.duration || !state.energy || !state.focus) return;
+  state.session = generateSession(state.players, state.energy, state.focus, state.duration);
   state.currentBlock = 0;
+
+  const totalDur = state.session.reduce((s, d) => s + d.duration, 0);
 
   // Plan title
   const focusLabel = state.focus === 'random' ? 'Mixed Focus' :
@@ -1083,11 +1178,10 @@ function generateAndShowPlan() {
     state.focus.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase());
   document.getElementById('plan-title').textContent = `${focusLabel} Session`;
   document.getElementById('plan-meta').textContent =
-    `${state.players} players · ${state.energy.charAt(0).toUpperCase() + state.energy.slice(1)} energy · ~60 min`;
+    `${state.players} players · ${state.energy.charAt(0).toUpperCase() + state.energy.slice(1)} energy · ${totalDur} min`;
 
   // Plan blocks
   const blocksEl = document.getElementById('plan-blocks');
-  const totalDur = state.session.reduce((s, d) => s + d.duration, 0);
   let blockNum = 1;
   blocksEl.innerHTML = state.session.map((drill, i) => {
     const bt = BLOCK_TYPES[drill.type] || BLOCK_TYPES.skill;
@@ -1544,6 +1638,66 @@ function showPlayDetail(id) {
   showScreen('play-detail');
 }
 
+// ─── DRILLS LIBRARY ───────────────────────────────────────────────────────────
+const DRILL_CATEGORIES = [
+  { label: '🌤 Warm-Ups', match: d => d.type === 'warmup' },
+  { label: '🎯 Shooting', match: d => d.type === 'skill' && d.focus.includes('shooting') },
+  { label: '🤲 Ball Handling', match: d => d.type === 'skill' && d.focus.includes('ball-handling') },
+  { label: '↔️ Passing', match: d => d.type === 'skill' && d.focus.includes('passing') },
+  { label: '🛡️ Defense', match: d => d.type === 'skill' && d.focus.includes('defense') },
+  { label: '🏀 Finishing', match: d => d.type === 'skill' && d.focus.includes('finishing') },
+  { label: '📋 Team Plays', match: d => d.focus.includes('plays') },
+  { label: '🟠 Game Finishers', match: d => d.type === 'finisher' },
+  { label: '🧊 Cool-Down', match: d => d.type === 'cooldown' }
+];
+
+function playerRangeLabel(d) {
+  if (d.minP === d.maxP) return `${d.minP} players`;
+  if (d.maxP >= 99) return `${d.minP}+ players`;
+  return `${d.minP}–${d.maxP} players`;
+}
+
+function showDrillsLibrary() {
+  let html = '';
+  DRILL_CATEGORIES.forEach(cat => {
+    const drills = DRILLS.filter(cat.match);
+    if (!drills.length) return;
+    const icon = cat.label.split(' ')[0];
+    html += `<div class="plays-cat-label">${cat.label}</div>`;
+    drills.forEach(d => {
+      html += `<div class="play-card" onclick="showDrillDetail('${d.id}')">
+        <div class="play-card-icon">${icon}</div>
+        <div class="play-card-body">
+          <div class="play-card-name">${d.name}</div>
+          <div class="play-card-sub">${d.duration} min · ${playerRangeLabel(d)}</div>
+        </div>
+        <div class="play-card-arrow">›</div>
+      </div>`;
+    });
+  });
+  document.getElementById('drills-list').innerHTML = html;
+}
+
+function showDrillDetail(id) {
+  const drill = DRILLS.find(d => d.id === id);
+  if (!drill) return;
+  document.getElementById('drilldetail-title').textContent = drill.name;
+  document.getElementById('drilldetail-pills').innerHTML =
+    `<div class="play-pill">${TAG_LABELS[drill.type] || drill.type}</div>
+     <div class="play-pill play-pill-blue">${drill.duration} min</div>
+     <div class="play-pill play-pill-blue">${playerRangeLabel(drill)}</div>`;
+  document.getElementById('drilldetail-yt').innerHTML = ytBtn(DRILL_YT[drill.id]);
+  document.getElementById('drilldetail-setup').textContent = drill.setup;
+  document.getElementById('drilldetail-how').textContent = drill.how;
+  document.getElementById('libdrill-levelup-body').textContent = drill.levelUp;
+  document.getElementById('libdrill-beginner-body').textContent = drill.beginner;
+  ['libdrill-levelup', 'libdrill-beginner'].forEach(pfx => {
+    document.getElementById(pfx + '-body').classList.remove('open');
+    document.getElementById(pfx + '-icon').classList.remove('open');
+  });
+  showScreen('drill-detail');
+}
+
 // ─── OVERRIDE SHOWSCREEN ──────────────────────────────────────────────────────
 // Override showScreen to run history logic
 const _showScreen = showScreen;
@@ -1551,6 +1705,7 @@ window.showScreen = function(name) {
   _showScreen(name);
   if (name === 'history') showHistory();
   if (name === 'plays') showPlays();
+  if (name === 'drills') showDrillsLibrary();
 };
 </script>
 <script>
