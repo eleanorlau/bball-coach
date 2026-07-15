@@ -424,6 +424,7 @@ body {
     <button class="btn btn-secondary" onclick="showScreen('drills')">🏋️ Drills Library</button>
     <button class="btn btn-secondary" onclick="showScreen('history')">Session History</button>
   </div>
+  <button class="btn btn-ghost" id="install-btn" onclick="installApp()" style="display:none; margin-top:20px;">⬇ Install App</button>
 </div>
 
 <!-- ── SETUP ──────────────────────────────────────────────────────── -->
@@ -1712,6 +1713,32 @@ window.showScreen = function(name) {
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js');
+  });
+}
+
+// ─── ONE-TAP INSTALL ──────────────────────────────────────────────────────
+let deferredInstallPrompt = null;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  const btn = document.getElementById('install-btn');
+  if (btn) btn.style.display = '';
+});
+
+window.addEventListener('appinstalled', () => {
+  deferredInstallPrompt = null;
+  const btn = document.getElementById('install-btn');
+  if (btn) btn.style.display = 'none';
+});
+
+function installApp() {
+  if (!deferredInstallPrompt) return;
+  deferredInstallPrompt.prompt();
+  deferredInstallPrompt.userChoice.finally(() => {
+    deferredInstallPrompt = null;
+    const btn = document.getElementById('install-btn');
+    if (btn) btn.style.display = 'none';
   });
 }
 </script>
