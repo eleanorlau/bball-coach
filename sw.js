@@ -1,4 +1,4 @@
-const CACHE = 'session-coach-v3';
+const CACHE = 'session-coach-v4';
 const ASSETS = [
   './team_session_coach.html',
   './manifest.json',
