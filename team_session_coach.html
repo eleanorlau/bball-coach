@@ -1,0 +1,1564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Session Coach 🏀</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#f97316">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Session Coach">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #0f0f0f;
+  color: #f0f0f0;
+  min-height: 100vh;
+  max-width: 480px;
+  margin: 0 auto;
+  position: relative;
+  overflow-x: hidden;
+}
+.screen { display: none; padding: 24px 20px 100px; min-height: 100vh; }
+.screen.active { display: block; }
+
+/* HOME */
+.home-hero {
+  text-align: center;
+  padding: 60px 0 40px;
+}
+.home-ball { font-size: 64px; margin-bottom: 16px; }
+.home-title { font-size: 28px; font-weight: 800; color: #fff; margin-bottom: 6px; }
+.home-sub { font-size: 14px; color: #666; }
+.home-actions { display: flex; flex-direction: column; gap: 12px; margin-top: 40px; }
+
+/* BUTTONS */
+.btn {
+  width: 100%;
+  border: none;
+  border-radius: 14px;
+  font-size: 16px;
+  font-weight: 700;
+  padding: 18px;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s;
+  font-family: inherit;
+}
+.btn:active { opacity: 0.85; transform: scale(0.98); }
+.btn-primary { background: #f97316; color: #fff; }
+.btn-secondary { background: #1e1e1e; color: #aaa; border: 1px solid #2a2a2a; }
+.btn-ghost { background: transparent; color: #888; font-size: 14px; padding: 12px; }
+.btn-sm { padding: 12px 20px; font-size: 14px; border-radius: 10px; width: auto; }
+.btn-danger { background: #2a1010; color: #f87171; border: 1px solid #3a1515; }
+
+/* SETUP */
+.setup-step { margin-bottom: 32px; }
+.setup-step-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #666;
+  margin-bottom: 12px;
+}
+.setup-step-title { font-size: 20px; font-weight: 700; color: #fff; margin-bottom: 16px; }
+.option-grid { display: grid; gap: 10px; }
+.option-grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+.option-grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
+.option-btn {
+  background: #1a1a1a;
+  border: 2px solid #2a2a2a;
+  border-radius: 12px;
+  padding: 16px 10px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+  color: #f0f0f0;
+}
+.option-btn .opt-icon { font-size: 24px; margin-bottom: 6px; }
+.option-btn .opt-label { font-size: 13px; font-weight: 600; color: #f0f0f0; }
+.option-btn .opt-sub { font-size: 11px; color: #666; margin-top: 2px; }
+.option-btn.selected { border-color: #f97316; background: #2a1500; }
+.option-btn.selected .opt-label { color: #f97316; }
+
+/* PLAN OVERVIEW */
+.plan-header { margin-bottom: 24px; }
+.plan-title { font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 4px; }
+.plan-meta { font-size: 13px; color: #666; }
+.plan-block {
+  background: #1a1a1a;
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 10px;
+  border: 1px solid #2a2a2a;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.plan-block-num {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+.block-warmup { background: #1a2a1a; color: #4ade80; }
+.block-skill { background: #1a1a2e; color: #818cf8; }
+.block-game { background: #2a1500; color: #f97316; }
+.block-cool { background: #1a2a2a; color: #60a5fa; }
+.plan-block-body { flex: 1; }
+.plan-block-name { font-size: 15px; font-weight: 700; color: #f0f0f0; }
+.plan-block-type { font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 2px; }
+.plan-block-dur { font-size: 13px; font-weight: 600; color: #888; margin-left: auto; flex-shrink: 0; }
+
+/* DRILL ACTIVE */
+.drill-progress {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 24px;
+}
+.drill-dot {
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: #2a2a2a;
+}
+.drill-dot.done { background: #f97316; }
+.drill-dot.active { background: #f97316; opacity: 0.5; }
+
+.drill-block-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 4px 10px;
+  border-radius: 20px;
+  margin-bottom: 10px;
+}
+.tag-warmup { background: #1a2a1a; color: #4ade80; }
+.tag-skill { background: #1a1a2e; color: #818cf8; }
+.tag-game { background: #2a1500; color: #f97316; }
+.tag-cool { background: #1a2a2a; color: #60a5fa; }
+
+.drill-name { font-size: 24px; font-weight: 800; color: #fff; margin-bottom: 20px; line-height: 1.2; }
+
+/* TIMER */
+.timer-wrap {
+  text-align: center;
+  margin: 0 0 24px;
+  position: relative;
+}
+.timer-ring {
+  position: relative;
+  width: 160px;
+  height: 160px;
+  margin: 0 auto 16px;
+}
+.timer-ring svg { transform: rotate(-90deg); }
+.timer-ring-bg { fill: none; stroke: #1e1e1e; stroke-width: 8; }
+.timer-ring-fill { fill: none; stroke: #f97316; stroke-width: 8; stroke-linecap: round; transition: stroke-dashoffset 1s linear, stroke 0.5s; }
+.timer-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+.timer-display { font-size: 36px; font-weight: 800; color: #fff; line-height: 1; letter-spacing: -0.02em; }
+.timer-label { font-size: 10px; color: #555; text-transform: uppercase; letter-spacing: 0.1em; margin-top: 4px; }
+.timer-btns { display: flex; gap: 10px; justify-content: center; }
+.timer-btn {
+  background: #1e1e1e;
+  border: 1px solid #2a2a2a;
+  border-radius: 10px;
+  padding: 10px 20px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #aaa;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+.timer-btn:active { opacity: 0.75; }
+.timer-btn.running { background: #f97316; color: #fff; border-color: #f97316; }
+
+/* DRILL CONTENT */
+.drill-section {
+  background: #1a1a1a;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  border: 1px solid #2a2a2a;
+}
+.drill-section-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #666;
+  margin-bottom: 6px;
+}
+.drill-section-body { font-size: 13px; color: #bbb; line-height: 1.6; }
+.expandable-section {
+  border-radius: 12px;
+  margin-bottom: 10px;
+  overflow: hidden;
+  border: 1px solid #2a2a2a;
+}
+.expandable-header {
+  background: #1a1a1a;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+}
+.expandable-body {
+  background: #141414;
+  padding: 0 16px;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease, padding 0.3s;
+  font-size: 13px;
+  color: #aaa;
+  line-height: 1.6;
+}
+.expandable-body.open { max-height: 200px; padding: 12px 16px; }
+.expand-icon { font-size: 10px; color: #555; transition: transform 0.2s; }
+.expand-icon.open { transform: rotate(180deg); }
+
+/* DRILL NAVIGATION */
+.drill-nav {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 480px;
+  background: #0f0f0f;
+  border-top: 1px solid #1e1e1e;
+  padding: 16px 20px 32px;
+  display: flex;
+  gap: 10px;
+}
+
+/* COMPLETE */
+.complete-hero { text-align: center; padding: 40px 0 32px; }
+.complete-icon { font-size: 64px; margin-bottom: 16px; }
+.complete-title { font-size: 26px; font-weight: 800; color: #fff; margin-bottom: 6px; }
+.complete-sub { font-size: 14px; color: #666; }
+.rating-row {
+  display: flex;
+  gap: 10px;
+  margin: 24px 0;
+}
+.rating-btn {
+  flex: 1;
+  background: #1a1a1a;
+  border: 2px solid #2a2a2a;
+  border-radius: 12px;
+  padding: 16px 0;
+  text-align: center;
+  font-size: 28px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+.rating-btn.selected { border-color: #f97316; background: #2a1500; }
+
+/* HISTORY */
+.history-item {
+  background: #1a1a1a;
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 10px;
+  border: 1px solid #2a2a2a;
+}
+.history-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.history-date { font-size: 12px; color: #666; }
+.history-rating { font-size: 20px; }
+.history-details { font-size: 14px; color: #f0f0f0; font-weight: 600; margin-bottom: 4px; }
+.history-drills { font-size: 12px; color: #666; line-height: 1.5; }
+
+/* SHARED */
+.page-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+.back-btn {
+  background: #1e1e1e;
+  border: none;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  color: #aaa;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  flex-shrink: 0;
+}
+.page-title { font-size: 20px; font-weight: 800; color: #fff; }
+.empty-state { text-align: center; padding: 60px 20px; color: #555; font-size: 14px; }
+.empty-state .empty-icon { font-size: 48px; margin-bottom: 16px; }
+.divider { height: 1px; background: #1e1e1e; margin: 20px 0; }
+.chip {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+  margin-right: 6px;
+}
+.chip-orange { background: #2a1500; color: #f97316; }
+
+/* YOUTUBE BUTTON */
+.yt-btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: #1a0808; border: 1px solid #3d1010;
+  color: #ff4444; border-radius: 9px; padding: 9px 14px;
+  font-size: 12px; font-weight: 700; text-decoration: none;
+  margin-bottom: 16px; cursor: pointer; font-family: inherit;
+  transition: background 0.15s;
+}
+.yt-btn:active { background: #2d1010; }
+.chip-blue { background: #0a1a2e; color: #60a5fa; }
+.chip-green { background: #0a2a1a; color: #4ade80; }
+
+/* PLAYS LIBRARY */
+.plays-cat-label {
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.1em; color: #555; margin: 20px 0 10px;
+}
+.play-card {
+  background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 14px;
+  padding: 16px; margin-bottom: 10px; cursor: pointer;
+  transition: border-color 0.15s;
+  display: flex; align-items: center; gap: 14px;
+}
+.play-card:active { border-color: #f97316; }
+.play-card-icon {
+  width: 44px; height: 44px; border-radius: 12px; background: #2a1500;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; flex-shrink: 0;
+}
+.play-card-body { flex: 1; }
+.play-card-name { font-size: 15px; font-weight: 700; color: #f0f0f0; }
+.play-card-sub { font-size: 12px; color: #666; margin-top: 3px; }
+.play-card-arrow { color: #444; font-size: 16px; }
+
+/* PLAY DETAIL */
+.play-svg-wrap {
+  background: #0a1a0a; border-radius: 12px; padding: 12px;
+  margin-bottom: 16px; border: 1px solid #1e3a1e;
+}
+.play-legend {
+  display: flex; gap: 14px; flex-wrap: wrap;
+  font-size: 11px; color: #666; margin-bottom: 16px; padding: 0 4px;
+}
+.play-legend span { display: flex; align-items: center; gap: 5px; }
+.legend-line {
+  width: 20px; height: 2.5px; border-radius: 2px; flex-shrink: 0;
+}
+.play-section {
+  background: #1a1a1a; border-radius: 12px; padding: 14px 16px;
+  margin-bottom: 10px; border: 1px solid #2a2a2a;
+}
+.play-section-label {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.1em; color: #666; margin-bottom: 8px;
+}
+.play-key-points { list-style: none; }
+.play-key-points li {
+  font-size: 13px; color: #bbb; line-height: 1.6; padding: 3px 0;
+  padding-left: 16px; position: relative;
+}
+.play-key-points li::before {
+  content: '→'; position: absolute; left: 0; color: #f97316;
+}
+.play-detail-pills {
+  display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px;
+}
+.play-pill {
+  font-size: 11px; font-weight: 700; padding: 4px 12px;
+  border-radius: 20px; background: #2a1500; color: #f97316;
+}
+.play-pill-blue { background: #0a1a2e; color: #60a5fa; }
+</style>
+</head>
+<body>
+
+<!-- ── HOME ───────────────────────────────────────────────────────── -->
+<div id="screen-home" class="screen active">
+  <div class="home-hero">
+    <div class="home-ball">🏀</div>
+    <div class="home-title">Session Coach</div>
+    <div class="home-sub">Informal team training made simple</div>
+  </div>
+  <div class="home-actions">
+    <button class="btn btn-primary" onclick="showScreen('setup')">▶ Start Session</button>
+    <button class="btn btn-secondary" onclick="showScreen('plays')">📋 Plays Library</button>
+    <button class="btn btn-secondary" onclick="showScreen('history')">Session History</button>
+  </div>
+</div>
+
+<!-- ── SETUP ──────────────────────────────────────────────────────── -->
+<div id="screen-setup" class="screen">
+  <div class="page-header">
+    <button class="back-btn" onclick="showScreen('home')">←</button>
+    <div class="page-title">New Session</div>
+  </div>
+
+  <div class="setup-step">
+    <div class="setup-step-label">Step 1</div>
+    <div class="setup-step-title">How many players?</div>
+    <div class="option-grid cols-3" id="player-options">
+      <button class="option-btn" data-value="2" onclick="selectOption('players', 2, this)">
+        <div class="opt-icon">👤👤</div>
+        <div class="opt-label">2</div>
+      </button>
+      <button class="option-btn" data-value="3" onclick="selectOption('players', 3, this)">
+        <div class="opt-icon">👥</div>
+        <div class="opt-label">3</div>
+      </button>
+      <button class="option-btn" data-value="4" onclick="selectOption('players', 4, this)">
+        <div class="opt-icon">👥</div>
+        <div class="opt-label">4</div>
+        <div class="opt-sub">2v2 possible</div>
+      </button>
+      <button class="option-btn" data-value="5" onclick="selectOption('players', 5, this)">
+        <div class="opt-icon">🏀</div>
+        <div class="opt-label">5</div>
+        <div class="opt-sub">3v2 possible</div>
+      </button>
+      <button class="option-btn" data-value="6" onclick="selectOption('players', 6, this)">
+        <div class="opt-icon">🏀</div>
+        <div class="opt-label">6+</div>
+        <div class="opt-sub">3v3 possible</div>
+      </button>
+    </div>
+  </div>
+
+  <div class="setup-step">
+    <div class="setup-step-label">Step 2</div>
+    <div class="setup-step-title">Energy level today?</div>
+    <div class="option-grid cols-3" id="energy-options">
+      <button class="option-btn" onclick="selectOption('energy', 'low', this)">
+        <div class="opt-icon">😌</div>
+        <div class="opt-label">Low</div>
+        <div class="opt-sub">Skill focus</div>
+      </button>
+      <button class="option-btn" onclick="selectOption('energy', 'medium', this)">
+        <div class="opt-icon">💪</div>
+        <div class="opt-label">Medium</div>
+        <div class="opt-sub">Balanced</div>
+      </button>
+      <button class="option-btn" onclick="selectOption('energy', 'high', this)">
+        <div class="opt-icon">🔥</div>
+        <div class="opt-label">High</div>
+        <div class="opt-sub">Competitive</div>
+      </button>
+    </div>
+  </div>
+
+  <div class="setup-step">
+    <div class="setup-step-label">Step 3</div>
+    <div class="setup-step-title">What to focus on?</div>
+    <div class="option-grid cols-2" id="focus-options">
+      <button class="option-btn" onclick="selectOption('focus', 'shooting', this)">
+        <div class="opt-icon">🎯</div>
+        <div class="opt-label">Shooting</div>
+      </button>
+      <button class="option-btn" onclick="selectOption('focus', 'ball-handling', this)">
+        <div class="opt-icon">🤲</div>
+        <div class="opt-label">Ball Handling</div>
+      </button>
+      <button class="option-btn" onclick="selectOption('focus', 'passing', this)">
+        <div class="opt-icon">↔️</div>
+        <div class="opt-label">Passing</div>
+      </button>
+      <button class="option-btn" onclick="selectOption('focus', 'defense', this)">
+        <div class="opt-icon">🛡️</div>
+        <div class="opt-label">Defense</div>
+      </button>
+      <button class="option-btn" onclick="selectOption('focus', 'finishing', this)">
+        <div class="opt-icon">🏀</div>
+        <div class="opt-label">Finishing</div>
+      </button>
+      <button class="option-btn" onclick="selectOption('focus', 'plays', this)">
+        <div class="opt-icon">📋</div>
+        <div class="opt-label">Team Plays</div>
+      </button>
+      <button class="option-btn" onclick="selectOption('focus', 'random', this)">
+        <div class="opt-icon">🎲</div>
+        <div class="opt-label">Surprise Me</div>
+      </button>
+    </div>
+  </div>
+
+  <button class="btn btn-primary" id="generate-btn" onclick="generateAndShowPlan()" style="opacity:0.4; pointer-events:none;">Generate Session →</button>
+</div>
+
+<!-- ── PLAN OVERVIEW ──────────────────────────────────────────────── -->
+<div id="screen-plan" class="screen">
+  <div class="page-header">
+    <button class="back-btn" onclick="showScreen('setup')">←</button>
+    <div class="page-title">Your Session</div>
+  </div>
+  <div class="plan-header">
+    <div class="plan-title" id="plan-title">Session Plan</div>
+    <div class="plan-meta" id="plan-meta"></div>
+  </div>
+  <div id="plan-blocks"></div>
+  <div style="margin-top:24px;">
+    <button class="btn btn-primary" onclick="startSession()">Start Session ▶</button>
+    <button class="btn btn-ghost" onclick="generateAndShowPlan()" style="margin-top:8px;">↺ Regenerate</button>
+  </div>
+</div>
+
+<!-- ── ACTIVE DRILL ───────────────────────────────────────────────── -->
+<div id="screen-drill" class="screen">
+  <div class="drill-progress" id="drill-progress"></div>
+  <div class="drill-block-tag" id="drill-tag"></div>
+  <div class="drill-name" id="drill-name"></div>
+  <div id="drill-yt"></div>
+
+  <div class="timer-wrap">
+    <div class="timer-ring">
+      <svg width="160" height="160" viewBox="0 0 160 160">
+        <circle class="timer-ring-bg" cx="80" cy="80" r="68"/>
+        <circle class="timer-ring-fill" id="timer-ring-fill" cx="80" cy="80" r="68"
+          stroke-dasharray="427" stroke-dashoffset="0"/>
+      </svg>
+      <div class="timer-text">
+        <div class="timer-display" id="timer-display">00:00</div>
+        <div class="timer-label">remaining</div>
+      </div>
+    </div>
+    <div class="timer-btns">
+      <button class="timer-btn" id="timer-toggle" onclick="toggleTimer()">▶ Start</button>
+      <button class="timer-btn" onclick="resetTimer()">↺ Reset</button>
+    </div>
+  </div>
+
+  <div class="drill-section">
+    <div class="drill-section-label">Setup</div>
+    <div class="drill-section-body" id="drill-setup"></div>
+  </div>
+
+  <div class="drill-section">
+    <div class="drill-section-label">How to run it</div>
+    <div class="drill-section-body" id="drill-how"></div>
+  </div>
+
+  <div class="expandable-section">
+    <div class="expandable-header" onclick="toggleExpand('levelup')">
+      <span>⬆️ Level Up (stronger players)</span>
+      <span class="expand-icon" id="levelup-icon">▼</span>
+    </div>
+    <div class="expandable-body" id="levelup-body"></div>
+  </div>
+
+  <div class="expandable-section" style="margin-bottom:80px;">
+    <div class="expandable-header" onclick="toggleExpand('beginner')">
+      <span>🌱 Beginner Focus</span>
+      <span class="expand-icon" id="beginner-icon">▼</span>
+    </div>
+    <div class="expandable-body" id="beginner-body"></div>
+  </div>
+
+  <div class="drill-nav">
+    <button class="btn btn-secondary btn-sm" id="drill-back-btn" onclick="prevDrill()">← Back</button>
+    <button class="btn btn-secondary btn-sm" onclick="skipDrill()">Skip</button>
+    <button class="btn btn-primary" style="flex:1;" onclick="nextDrill()">Next →</button>
+  </div>
+</div>
+
+<!-- ── COMPLETE ────────────────────────────────────────────────────── -->
+<div id="screen-complete" class="screen">
+  <div class="complete-hero">
+    <div class="complete-icon">🎉</div>
+    <div class="complete-title">Session Done!</div>
+    <div class="complete-sub" id="complete-sub"></div>
+  </div>
+  <div style="background:#1a1a1a; border-radius:14px; padding:16px; margin-bottom:20px; border:1px solid #2a2a2a;">
+    <div style="font-size:12px; color:#666; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:10px;">Drills completed</div>
+    <div id="complete-drills" style="font-size:13px; color:#aaa; line-height:1.8;"></div>
+  </div>
+  <div style="font-size:13px; color:#888; margin-bottom:12px;">How did the session feel?</div>
+  <div class="rating-row" id="rating-row">
+    <button class="rating-btn" onclick="selectRating('😤', this)" title="Tough">😤</button>
+    <button class="rating-btn" onclick="selectRating('😐', this)" title="Okay">😐</button>
+    <button class="rating-btn" onclick="selectRating('😊', this)" title="Good">😊</button>
+    <button class="rating-btn" onclick="selectRating('🔥', this)" title="Great">🔥</button>
+  </div>
+  <button class="btn btn-primary" onclick="saveSession()">Save & Finish</button>
+  <button class="btn btn-ghost" onclick="showScreen('home')" style="margin-top:8px;">Skip saving</button>
+</div>
+
+<!-- ── PLAYS LIBRARY ──────────────────────────────────────────────── -->
+<div id="screen-plays" class="screen">
+  <div class="page-header">
+    <button class="back-btn" onclick="showScreen('home')">←</button>
+    <div class="page-title">Plays Library</div>
+  </div>
+  <p style="font-size:13px;color:#666;margin-bottom:20px;line-height:1.6;">Tap any play to see the court diagram, coaching cues, and how to drill it with your group.</p>
+  <div id="plays-list"></div>
+</div>
+
+<!-- ── PLAY DETAIL ────────────────────────────────────────────────── -->
+<div id="screen-play-detail" class="screen">
+  <div class="page-header">
+    <button class="back-btn" onclick="showScreen('plays')">←</button>
+    <div class="page-title" id="play-detail-title"></div>
+  </div>
+  <div class="play-detail-pills" id="play-detail-pills"></div>
+  <div class="play-svg-wrap" id="play-detail-svg"></div>
+  <div id="play-yt"></div>
+  <div class="play-legend">
+    <span><div class="legend-line" style="background:#fbbf24"></div>Dribble</span>
+    <span><div class="legend-line" style="background:#60a5fa;border-top:2px dashed #60a5fa;height:0"></div>Pass</span>
+    <span><div class="legend-line" style="background:#4ade80"></div>Cut / Roll</span>
+    <span><div class="legend-line" style="background:#e2e8f0;height:4px"></div>Screen</span>
+  </div>
+  <div class="play-section">
+    <div class="play-section-label">📍 When to call it</div>
+    <div style="font-size:13px;color:#bbb;line-height:1.6;" id="play-when"></div>
+  </div>
+  <div class="play-section">
+    <div class="play-section-label">✅ Key coaching points</div>
+    <ul class="play-key-points" id="play-keys"></ul>
+  </div>
+  <div class="play-section">
+    <div class="play-section-label">🔁 How to drill it</div>
+    <div style="font-size:13px;color:#bbb;line-height:1.6;" id="play-drill"></div>
+  </div>
+  <div class="expandable-section">
+    <div class="expandable-header" onclick="toggleExpand('play-levelup')">
+      <span>⬆️ Level Up</span>
+      <span class="expand-icon" id="play-levelup-icon">▼</span>
+    </div>
+    <div class="expandable-body" id="play-levelup-body" style="margin-bottom:0;"></div>
+  </div>
+  <div class="expandable-section" style="margin-bottom:40px;">
+    <div class="expandable-header" onclick="toggleExpand('play-beginner')">
+      <span>🌱 Beginner Focus</span>
+      <span class="expand-icon" id="play-beginner-icon">▼</span>
+    </div>
+    <div class="expandable-body" id="play-beginner-body"></div>
+  </div>
+</div>
+
+<!-- ── HISTORY ─────────────────────────────────────────────────────── -->
+<div id="screen-history" class="screen">
+  <div class="page-header">
+    <button class="back-btn" onclick="showScreen('home')">←</button>
+    <div class="page-title">Session History</div>
+  </div>
+  <div id="history-list"></div>
+</div>
+
+<script>
+// ─── STATE ────────────────────────────────────────────────────────────────────
+const state = {
+  players: null,
+  energy: null,
+  focus: null,
+  session: [],
+  currentBlock: 0,
+  rating: null,
+  timer: { interval: null, remaining: 0, total: 0, running: false }
+};
+
+// ─── DRILL LIBRARY ────────────────────────────────────────────────────────────
+const DRILLS = [
+
+// ── WARMUPS ──────────────────────────────────────────────────
+{
+  id: 'w-dribble-walk',
+  name: 'Dribble Walk + Dynamic Stretch',
+  type: 'warmup', minP: 2, maxP: 99, energy: ['low','medium','high'],
+  focus: ['any'], duration: 7,
+  setup: 'Everyone has a ball. Start at one end of the court.',
+  how: 'Walk the court length while dribbling — right hand down, left hand back. Then: high knees across, lateral shuffles back. Finish with a quick group stretch: calves, hip flexors, arm circles. Keep it loose and social — this is the warm-up, not the session.',
+  levelUp: 'Add between-the-legs or behind-the-back dribble while walking.',
+  beginner: 'Just dribble comfortably — keep your eyes up, not on the ball.'
+},
+{
+  id: 'w-layup-lines',
+  name: 'Layup Lines',
+  type: 'warmup', minP: 2, maxP: 99, energy: ['low','medium','high'],
+  focus: ['finishing','any'], duration: 7,
+  setup: 'Two lines, one on each wing at 45°. If fewer than 4 people, just alternate sides.',
+  how: 'Alternate driving in and shooting a layup from each side. Right side = right hand, left side = left hand. Keep it moving — the moment you shoot, get your rebound and join the other line. Start at walking pace, build to game speed.',
+  levelUp: 'Add a euro step or power (two-foot) layup. Try to make 10 in a row.',
+  beginner: 'Focus on the correct foot. Right side: left foot is your take-off foot. Left side: right foot takes off.'
+},
+{
+  id: 'w-passing-walk',
+  name: 'Partner Passing Warm-up',
+  type: 'warmup', minP: 2, maxP: 99, energy: ['low','medium'],
+  focus: ['passing','any'], duration: 7,
+  setup: 'Pair up. One ball per pair. Stand about 4 metres apart.',
+  how: 'Chest pass back and forth for 1 minute. Bounce pass for 1 minute. Overhead for 1 minute. Then move — walk toward each other passing, then back. Finish with a quick v-cut drill: one player cuts to receive, catches, passes back.',
+  levelUp: 'Add a behind-the-back pass or no-look pass on every third rep.',
+  beginner: 'Focus on stepping into the pass — step toward your target as you throw.'
+},
+
+// ── SHOOTING ──────────────────────────────────────────────────
+{
+  id: 's-spot-shooting',
+  name: 'Spot Shooting Challenge',
+  type: 'skill', minP: 2, maxP: 99, energy: ['low','medium'],
+  focus: ['shooting'], duration: 15,
+  setup: 'Mark 5 spots around the key (both elbows, both wings, top of key). Everyone shoots from the same spot at the same time — just spread out.',
+  how: 'Each player shoots 3 attempts from each spot. Track your own makes. Move clockwise. After all 5 spots, compare totals. The person with most makes picks the next drill (or gets to sit out the hardest part of the next block). Second round: same but one dribble before shooting.',
+  levelUp: 'Move each spot one big step further from the basket. Challenge yourself to shoot on balance every time.',
+  beginner: 'Start at a spot that feels makeable. Focus on: feet shoulder-width, knees bent, elbow under the ball, follow through.'
+},
+{
+  id: 's-horse',
+  name: 'HORSE',
+  type: 'skill', minP: 2, maxP: 5, energy: ['low','medium'],
+  focus: ['shooting'], duration: 15,
+  setup: 'Decide order. First player picks any shot from anywhere.',
+  how: 'Player 1 takes a shot and calls it (e.g. "left elbow, one dribble"). If they make it, everyone else must make the same shot. Miss = a letter (H-O-R-S-E). If Player 1 misses their call, no letters, next person picks. Out when you spell HORSE. Shorter game: use PIG for faster play.',
+  levelUp: 'Call increasingly creative shots — behind the backboard, off the wall, one-handed. No layups allowed.',
+  beginner: 'Allowed to simplify: take a shot from anywhere without a specific call. Focus on making your own attempts.'
+},
+{
+  id: 's-around-world',
+  name: 'Around the World',
+  type: 'skill', minP: 2, maxP: 99, energy: ['low','medium'],
+  focus: ['shooting'], duration: 15,
+  setup: 'Mark 7 spots in a semicircle around the basket: two corners, two wings, two elbows, and the top of the key.',
+  how: 'Each player must make a shot from each spot in order before moving on. Make it → move to next spot. Miss → stay (or choose: take one more chance shot, but miss again and go back to start). First player to complete all 7 spots wins the round. Play 2–3 rounds.',
+  levelUp: 'Make it a race — clock how long it takes you to complete all 7 spots. Beat your time next session.',
+  beginner: 'Move your spots closer to the basket. It\'s better to shoot from closer and make it than miss from far away.'
+},
+{
+  id: 's-21',
+  name: '21',
+  type: 'skill', minP: 3, maxP: 99, energy: ['medium','high'],
+  focus: ['shooting'], duration: 15,
+  setup: 'Everyone plays at once, one ball, half court. No teams.',
+  how: 'Everyone starts at the free throw line. First player shoots — make it = score 2 and shoot a free throw (score 1 if made). Miss = everyone scrambles for the rebound. Whoever gets it shoots from where they caught it (no dribbling). Make it → go to free throw line for 3 attempts worth 1 each. First to exactly 21 wins. Go over 21 = back to 11.',
+  levelUp: 'Set a personal sub-goal: make at least 3 free throws this game. Count them.',
+  beginner: 'Focus on getting good rebounds and making solid decisions — shoot when you\'re close and open.'
+},
+
+// ── BALL HANDLING ─────────────────────────────────────────────
+{
+  id: 's-bh-circuit',
+  name: 'Ball Handling Circuit',
+  type: 'skill', minP: 2, maxP: 99, energy: ['low','medium'],
+  focus: ['ball-handling'], duration: 15,
+  setup: 'Everyone has a ball. Stand in a loose group with space around each person.',
+  how: 'Run through each move together, 45 seconds each: single hand (R then L), crossover, between the legs (R-to-L then L-to-R), behind the back, figure 8. After the circuit, play a competition: everyone does the same move for 30 seconds — last person to lose control of their ball wins. Run the circuit twice.',
+  levelUp: 'Add a combination: crossover → between the legs → behind the back as one sequence.',
+  beginner: 'Go at a pace where you don\'t lose the ball. Slow and controlled beats fast and messy.'
+},
+{
+  id: 's-dribble-tag',
+  name: 'Dribble Tag',
+  type: 'skill', minP: 3, maxP: 99, energy: ['high'],
+  focus: ['ball-handling'], duration: 15,
+  setup: 'Everyone has a ball. Set a boundary (e.g. the 3-point arc or half court). Designate 1–2 people as "it."',
+  how: 'Everyone must dribble constantly. "It" players try to knock someone else\'s ball away while maintaining their own dribble. Lose your ball or step out of bounds = you\'re it. Play for 3 minutes straight, then rest 1 minute, then again. This drill builds dribble protection without thinking about it.',
+  levelUp: 'You must use your weak hand only. Or: dribble two balls simultaneously.',
+  beginner: 'Stay near the edge of the group rather than the middle. Focus on shielding your ball with your body.'
+},
+{
+  id: 's-1v1-keepaway',
+  name: '1v1 Dribble Keep-Away',
+  type: 'skill', minP: 2, maxP: 99, energy: ['medium','high'],
+  focus: ['ball-handling','defense'], duration: 15,
+  setup: 'Pairs. One ball per pair. Small area — roughly within the paint.',
+  how: 'Offensive player dribbles and tries to keep the ball away from the defender for 30 seconds without leaving the area. Defender tries to knock it away or force a travel. Swap roles after 30 seconds. Play 4 rounds each. If the group is odd, rotate in on each round.',
+  levelUp: 'Offensive player must perform at least 3 different dribble moves before time is up.',
+  beginner: 'Focus on using your body to shield the ball — keep yourself between the defender and the ball.'
+},
+
+// ── PASSING ───────────────────────────────────────────────────
+{
+  id: 's-passing-challenge',
+  name: 'Partner Passing Challenge',
+  type: 'skill', minP: 2, maxP: 99, energy: ['low','medium'],
+  focus: ['passing'], duration: 15,
+  setup: 'Pairs, one ball each pair. Start 4m apart.',
+  how: 'Round 1 (4 min): How many passes can you make in a row without a drop? Count together. Try to beat 30. Round 2 (5 min): take one step back after every 10 catches. See how far apart you can get while maintaining clean passes. Round 3 (4 min): one-handed passing only, alternate hands.',
+  levelUp: 'Add a fake before each pass — look one way, pass the other.',
+  beginner: 'Focus on catching with two hands, fingers spread. Step toward the ball as it arrives.'
+},
+{
+  id: 's-monkey',
+  name: 'Monkey in the Middle',
+  type: 'skill', minP: 3, maxP: 5, energy: ['medium'],
+  focus: ['passing','defense'], duration: 15,
+  setup: 'Groups of 3. Two passers, one defender in the middle. Small area.',
+  how: 'The two outside players try to complete 10 passes without the middle player intercepting. Interception or deflection = the passer becomes the new middle. Outside players cannot hold the ball for more than 3 seconds. Count total consecutive passes per round. Rotate every 2 minutes.',
+  levelUp: 'No-look passes only. Or: restrict to bounce passes only.',
+  beginner: 'Move your feet — always try to create a clear passing lane rather than throwing over the defender.'
+},
+{
+  id: 's-3man-weave',
+  name: '3-Man Weave',
+  type: 'skill', minP: 3, maxP: 99, energy: ['medium','high'],
+  focus: ['passing','finishing'], duration: 15,
+  setup: 'Three lines at one baseline. Middle player starts with the ball.',
+  how: 'Middle passes to one side, then runs behind that player. That player passes to the opposite player, then runs behind them. Continue weaving and passing up the court. Finish with a layup. Come back the other way. This is a coordination drill — the goal is no dropped passes and a made layup. Run 6–8 times.',
+  levelUp: 'Increase pace. Then try a 2v1 fast break finish at the end (two players vs one defender).',
+  beginner: 'Say the name of the person you\'re passing to before you pass. Helps with timing and awareness.'
+},
+
+// ── DEFENSE ───────────────────────────────────────────────────
+{
+  id: 's-closeout',
+  name: '1v1 Closeout',
+  type: 'skill', minP: 2, maxP: 99, energy: ['medium'],
+  focus: ['defense','shooting'], duration: 15,
+  setup: 'Pairs. One player at elbow with ball, defender under basket.',
+  how: 'Defender runs out to close out on the shooter (hand up, under control — don\'t fly past them). Shooter can: catch and shoot, or drive if the defender overruns. Play 1v1 live from there. Score 2 or defend → swap roles. 5 rounds each. This trains both closing out (defense) and shooting/driving under pressure (offense).',
+  levelUp: 'Defender starts further away (under the basket) and must close out in 2 seconds or the shooter gets a free shot.',
+  beginner: 'Defenders: run out fast but chop your steps as you arrive. Shooters: be ready to catch and shoot quickly — if you hesitate you lose the advantage.'
+},
+{
+  id: 's-mirror',
+  name: 'Mirror Defense Drill',
+  type: 'skill', minP: 2, maxP: 99, energy: ['medium'],
+  focus: ['defense'], duration: 15,
+  setup: 'Pairs facing each other. No ball. Small area.',
+  how: 'One player leads, moving left/right, forward/back in an athletic stance. The defender mirrors every movement, staying in front. Switch leader every 45 seconds. Then add a ball: leader dribbles, defender mirrors without reaching. This builds defensive footwork and lateral quickness directly relevant to your games.',
+  levelUp: 'Leader tries to make one sudden explosive move to get past the defender. Defender reacts and cuts them off.',
+  beginner: 'Stay in a low athletic stance — bend your knees. Small, quick steps rather than big lunges.'
+},
+
+// ── FINISHING ─────────────────────────────────────────────────
+{
+  id: 's-mikan',
+  name: 'Mikan Drill Challenge',
+  type: 'skill', minP: 2, maxP: 99, energy: ['low','medium'],
+  focus: ['finishing'], duration: 15,
+  setup: 'Each person at the basket. One ball each if possible, otherwise take turns.',
+  how: 'Alternate layups from both sides — right side right hand, left side left hand — without letting the ball touch the ground. Count consecutive makes. Target: 10 in a row. Then competition: who can get to 20 makes (total, not consecutive) fastest? Each player counts their own. This is the single best finishing drill for mixed levels.',
+  levelUp: 'Power layup (two-foot take-off) on every left-side attempt. Try to get 10 in a row.',
+  beginner: 'Use the backboard. Aim for the top corner of the painted square. Right side = aim top-right corner.'
+},
+{
+  id: 's-drive-finish',
+  name: 'Drive & Finish Competition',
+  type: 'skill', minP: 2, maxP: 99, energy: ['medium','high'],
+  focus: ['finishing','ball-handling'], duration: 15,
+  setup: 'Cones or spots at each wing (45° angle). One ball per player or take turns. Start at the wing.',
+  how: 'Drive from the wing at full speed and finish with a layup. Alternate sides each rep. Round 1: normal layup. Round 2: power layup (two-foot). Round 3: euro step (go slow if new to it). Count your makes out of 10 attempts each round. Compare with your group.',
+  levelUp: 'Add a defender standing near the basket (passive, arms up, not blocking — just a presence to finish around).',
+  beginner: 'Focus on the approach: two dribbles, gather, correct foot take-off. Don\'t rush — a controlled finish beats a rushed miss.'
+},
+{
+  id: 's-1v1-wing',
+  name: '1v1 from the Wing',
+  type: 'skill', minP: 2, maxP: 99, energy: ['medium','high'],
+  focus: ['finishing','defense','shooting'], duration: 15,
+  setup: 'Pairs. Offense starts at the wing with the ball. Defender guards them.',
+  how: 'Offensive player has 3 dribbles to score. Defender plays live defense. If score → offense stays, new defender in. If stop → roles swap. No group is watching — everyone plays simultaneously in pairs. 3 dribble limit keeps it honest and focuses on decisive drives rather than endless dribbling. Play for 10 minutes then rest.',
+  levelUp: 'Reduce to 2 dribbles. Or: must use a specific move (jab step, crossover) before driving.',
+  beginner: 'Don\'t try to dribble around the defender — use your jab step to get them leaning, then drive straight past them.'
+},
+
+// ── GAME FINISHERS ────────────────────────────────────────────
+{
+  id: 'f-1v1-series',
+  name: '1v1 Series — First to 7',
+  type: 'finisher', minP: 2, maxP: 2, energy: ['medium','high'],
+  focus: ['any'], duration: 18,
+  setup: 'Two players, half court, check ball at the top of the key.',
+  how: 'First to score 7 baskets wins the game. Make it, take it (scorer keeps the ball). Check ball after each score — take it back to the top. Losing player picks the next game. Best 2 out of 3 series. This is the most intense 1v1 skill development available — everything matters.',
+  levelUp: 'Add a rule: must score from both sides of the basket to win (can\'t just go right every time).',
+  beginner: 'Focus on reading your defender. What are they giving you? Drive when they\'re too far, shoot when they\'re too close.'
+},
+{
+  id: 'f-2v2',
+  name: '2v2 Half Court',
+  type: 'finisher', minP: 4, maxP: 4, energy: ['medium','high'],
+  focus: ['any'], duration: 18,
+  setup: 'Two teams of two. Half court. Check ball.',
+  how: 'First to 11 wins, win by 2. Make it, take it. 2-pointer for anything inside the arc, 3-pointer outside. Focus on communication, pick and roll, and finding the open player. Losers sit, new team rotates in. Great for developing team awareness in a small setting.',
+  levelUp: 'You must call a set play before each possession (e.g. "screen left, you cut"). Builds structure.',
+  beginner: 'Your job: move without the ball. Don\'t just watch — cut toward the basket or set a screen whenever you don\'t have it.'
+},
+{
+  id: 'f-3v2-rotating',
+  name: '3v2 + Rotate',
+  type: 'finisher', minP: 5, maxP: 5, energy: ['high'],
+  focus: ['any'], duration: 18,
+  setup: 'Three attackers, two defenders. One person waits at half court. Half court game.',
+  how: 'Three players attack two defenders. Score or defend → two players from the losing team go off, the waiting player joins the team that just came on defense, three new attackers attack. If 3 attack: score = they stay on offense. Defenders stop them = the defender who got the stop picks a teammate, those two stay on to defend.',
+  levelUp: 'Offense: you must make at least 2 passes before shooting. Builds patience in attack.',
+  beginner: 'In a 3v2 you always have a numbers advantage. Spread the floor, make one pass to create an open shot.'
+},
+{
+  id: 'f-3v3',
+  name: '3v3 Half Court',
+  type: 'finisher', minP: 6, maxP: 99, energy: ['high'],
+  focus: ['any'], duration: 18,
+  setup: 'Two teams of three (rotate extras in). Half court. Check ball.',
+  how: 'First to 11, win by 2. Make it take it. 3-pointers count from outside the arc. Rotate teams every 11-0 game or every 5 minutes if it\'s close. 3v3 is the sweet spot for a social group — everyone is involved, you can\'t hide, and it\'s pure basketball.',
+  levelUp: 'Must make 2 passes before any shot attempt. Or: assign positions and run basic plays.',
+  beginner: 'Pick one assignment for yourself each possession: set a screen, cut to the basket, or hold the corner for the kick-out pass.'
+},
+{
+  id: 'f-knockout',
+  name: 'Knockout',
+  type: 'finisher', minP: 3, maxP: 99, energy: ['high'],
+  focus: ['shooting'], duration: 18,
+  setup: 'Everyone lines up at the free throw line. First two players have a ball each.',
+  how: 'First player shoots. If they make it before the person behind them, they\'re safe and pass their ball to the next person. If the person behind makes it first, the player in front is knocked out. Last person standing wins. Elimination = one push-up (or just sit and cheer). Play multiple rounds — losers get back in after each round.',
+  levelUp: 'Must shoot from the three-point line after making your free throw.',
+  beginner: 'Take your time on the first shot — a made free throw almost always means you\'re safe. Don\'t rush.'
+},
+{
+  id: 'f-21-game',
+  name: '21 — Full Game',
+  type: 'finisher', minP: 3, maxP: 99, energy: ['high'],
+  focus: ['shooting','finishing'], duration: 18,
+  setup: 'Everyone starts at the free throw line. One ball. No teams.',
+  how: 'First player shoots. Miss = everyone scrambles for the rebound and shoots from where they catch it. Make the shot = go to free throw line for up to 3 bonus shots worth 1 point each. First to exactly 21 wins. Go over 21 = back to 11. This game rewards both shooting and hustle.',
+  levelUp: 'Pressure rule: if you\'re within 3 points of winning, everyone else can double-team you on rebounds.',
+  beginner: 'Forget the score for now — focus on getting to good rebounding position and taking shots when you\'re close to the basket.'
+},
+
+// ── TEAM PLAYS ────────────────────────────────────────────────
+{
+  id: 's-plays-walkthrough',
+  name: 'Plays Walk-Through',
+  type: 'skill', minP: 2, maxP: 99, energy: ['low','medium'],
+  focus: ['plays'], duration: 15,
+  setup: 'No defense yet. Pick one play from the Plays Library that suits your group size. Check the diagram first.',
+  how: 'Run the play at walking pace — call out each role as you go ("setting screen now", "rolling now"). 5 reps walking. 5 reps at 70% speed. 5 reps at game speed. Focus on timing and reading, not athleticism. Switch roles and repeat. The goal: everyone knows where they\'re going before any defense is added.',
+  levelUp: 'Pick a second play and chain them: run play 1, reset, then run play 2. Practice flowing from one into the other when the first option isn\'t there.',
+  beginner: 'Call out your action before you do it. Say "cutting!" or "screening!" so the ball handler knows what\'s coming. Removes hesitation for everyone.'
+},
+{
+  id: 's-plays-vs-defense',
+  name: 'Plays vs Defense',
+  type: 'skill', minP: 2, maxP: 99, energy: ['medium','high'],
+  focus: ['plays'], duration: 15,
+  setup: 'Same play from the walk-through. Add defenders — start passive (hands-down, light pressure), then go live.',
+  how: 'Run the same play against passive defenders who allow 80% of it to work. Then tighten: defenders play live. The offense calls the play by name before each possession. Run it. Score or stop → swap offense/defense. Goal: make the play work at least 3 times per possession set before moving on to the next.',
+  levelUp: 'Defenders are allowed to switch: the offense must read the switch and adjust (e.g. switch on a pick and roll → roll man is now open, not the ball handler).',
+  beginner: 'If the play breaks down, reset and try again. Don\'t freelance — the practice value comes from running the specific play, not improvising around it.'
+},
+{
+  id: 's-plays-3pass-game',
+  name: '3-Pass Before Shoot',
+  type: 'skill', minP: 4, maxP: 99, energy: ['medium','high'],
+  focus: ['plays','passing'], duration: 15,
+  setup: 'Two teams. Half court. Same rules as regular play but with one extra rule: minimum 3 passes before any shot attempt.',
+  how: 'Play half court game with the 3-pass rule. Any shot taken before 3 passes = possession over, ball to other team. This forces ball movement and teaches players to read when the play is creating something vs. when to reset. Exactly the habit that makes plays work in real games.',
+  levelUp: 'Raise to 4 passes. Or: the pass that leads directly to a score must come from a player who just cut — you must create with movement, not standing.',
+  beginner: 'Count the passes out loud as a team: "one, two, three!" You\'ll naturally start moving to create open passing lanes.'
+},
+
+// ── COOLDOWN ──────────────────────────────────────────────────
+{
+  id: 'c-stretch-debrief',
+  name: 'Cool-Down + Debrief',
+  type: 'cooldown', minP: 2, maxP: 99, energy: ['low','medium','high'],
+  focus: ['any'], duration: 5,
+  setup: 'Everyone together in a loose circle.',
+  how: 'Work through: calf stretch (30 sec each leg), hip flexor lunge (30 sec each), hamstring stretch (30 sec each), shoulder stretch (30 sec each), wrist circles. While stretching: go around the circle — everyone says one thing they want to work on next session. This 30 seconds of reflection cements improvement better than most coaches know.',
+  levelUp: 'Set a specific challenge for next session (e.g. "I\'m going to score a left-hand layup in the game").',
+  beginner: 'Share what you tried today, even if it didn\'t work. Naming it helps you remember to try again.'
+}
+
+]; // end DRILLS
+
+// ─── FOCUS COMPLEMENT MAP ─────────────────────────────────────────────────────
+const COMPLEMENTS = {
+  'shooting': ['finishing', 'ball-handling'],
+  'ball-handling': ['passing', 'finishing'],
+  'passing': ['defense', 'shooting'],
+  'defense': ['finishing', 'ball-handling'],
+  'finishing': ['shooting', 'passing'],
+  'plays': ['passing', 'finishing'],
+  'random': ['shooting', 'ball-handling', 'passing', 'defense', 'finishing']
+};
+
+// ─── SESSION GENERATOR ───────────────────────────────────────────────────────
+function generateSession(players, energy, focus) {
+  const p = parseInt(players);
+  const realFocus = focus === 'random'
+    ? COMPLEMENTS.random[Math.floor(Math.random() * COMPLEMENTS.random.length)]
+    : focus;
+
+  function getDrill(type, focusAreas, excludeIds = []) {
+    const pool = DRILLS.filter(d =>
+      d.type === type &&
+      d.minP <= p && d.maxP >= p &&
+      d.energy.includes(energy) &&
+      (d.focus.includes('any') || focusAreas.some(f => d.focus.includes(f))) &&
+      !excludeIds.includes(d.id)
+    );
+    if (!pool.length) {
+      // Fallback: relax energy constraint
+      const fallback = DRILLS.filter(d =>
+        d.type === type && d.minP <= p && d.maxP >= p && !excludeIds.includes(d.id)
+      );
+      return fallback[Math.floor(Math.random() * fallback.length)];
+    }
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+
+  const warmup = getDrill('warmup', [realFocus, 'any']);
+  const playsMode = focus === 'plays';
+  const skill1 = getDrill('skill', playsMode ? ['plays'] : [realFocus], [warmup?.id]);
+  const complements = COMPLEMENTS[realFocus] || COMPLEMENTS.random;
+  const skill2 = getDrill('skill', playsMode ? ['plays','passing'] : complements, [warmup?.id, skill1?.id]);
+  const finisher = getDrill('finisher', ['any'], []);
+  const cooldown = DRILLS.find(d => d.type === 'cooldown');
+
+  return [warmup, skill1, skill2, finisher, cooldown].filter(Boolean);
+}
+
+// ─── UI HELPERS ───────────────────────────────────────────────────────────────
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function selectOption(type, value, el) {
+  const group = el.closest('.option-grid');
+  group.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  state[type] = value;
+  updateGenerateBtn();
+}
+
+function updateGenerateBtn() {
+  const btn = document.getElementById('generate-btn');
+  const ready = state.players && state.energy && state.focus;
+  btn.style.opacity = ready ? '1' : '0.4';
+  btn.style.pointerEvents = ready ? 'auto' : 'none';
+}
+
+// ─── PLAN ─────────────────────────────────────────────────────────────────────
+const BLOCK_TYPES = {
+  warmup: { label: 'Warm-Up', cls: 'block-warmup', tag: '🟢' },
+  skill: { label: 'Skill Block', cls: 'block-skill', tag: '🔵' },
+  finisher: { label: 'Game Finisher', cls: 'block-game', tag: '🟠' },
+  cooldown: { label: 'Cool-Down', cls: 'block-cool', tag: '🔵' }
+};
+
+function generateAndShowPlan() {
+  if (!state.players || !state.energy || !state.focus) return;
+  state.session = generateSession(state.players, state.energy, state.focus);
+  state.currentBlock = 0;
+
+  // Plan title
+  const focusLabel = state.focus === 'random' ? 'Mixed Focus' :
+    state.focus === 'plays' ? 'Team Plays' :
+    state.focus.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase());
+  document.getElementById('plan-title').textContent = `${focusLabel} Session`;
+  document.getElementById('plan-meta').textContent =
+    `${state.players} players · ${state.energy.charAt(0).toUpperCase() + state.energy.slice(1)} energy · ~60 min`;
+
+  // Plan blocks
+  const blocksEl = document.getElementById('plan-blocks');
+  const totalDur = state.session.reduce((s, d) => s + d.duration, 0);
+  let blockNum = 1;
+  blocksEl.innerHTML = state.session.map((drill, i) => {
+    const bt = BLOCK_TYPES[drill.type] || BLOCK_TYPES.skill;
+    const num = drill.type === 'warmup' ? '🌤' :
+                drill.type === 'cooldown' ? '🧊' : blockNum++;
+    return `<div class="plan-block">
+      <div class="plan-block-num ${bt.cls}">${num}</div>
+      <div class="plan-block-body">
+        <div class="plan-block-name">${drill.name}</div>
+        <div class="plan-block-type">${bt.label}</div>
+      </div>
+      <div class="plan-block-dur">${drill.duration} min</div>
+    </div>`;
+  }).join('');
+
+  showScreen('plan');
+}
+
+// ─── SESSION RUNNER ───────────────────────────────────────────────────────────
+function startSession() {
+  state.currentBlock = 0;
+  showDrill(0);
+  showScreen('drill');
+}
+
+const TAG_STYLES = {
+  warmup: 'tag-warmup',
+  skill: 'tag-skill',
+  finisher: 'tag-game',
+  cooldown: 'tag-cool'
+};
+const TAG_LABELS = {
+  warmup: '🌤 Warm-Up',
+  skill: '🔵 Skill Block',
+  finisher: '🟠 Game Finisher',
+  cooldown: '🧊 Cool-Down'
+};
+
+function showDrill(index) {
+  const drill = state.session[index];
+  if (!drill) { showComplete(); return; }
+  state.currentBlock = index;
+
+  // Progress dots
+  const dots = document.getElementById('drill-progress');
+  dots.innerHTML = state.session.map((_, i) =>
+    `<div class="drill-dot ${i < index ? 'done' : i === index ? 'active' : ''}"></div>`
+  ).join('');
+
+  // Tag
+  const tag = document.getElementById('drill-tag');
+  tag.className = 'drill-block-tag ' + (TAG_STYLES[drill.type] || 'tag-skill');
+  tag.textContent = TAG_LABELS[drill.type] || 'Block';
+
+  document.getElementById('drill-name').textContent = drill.name;
+  document.getElementById('drill-yt').innerHTML = ytBtn(DRILL_YT[drill.id]);
+  document.getElementById('drill-setup').textContent = drill.setup;
+  document.getElementById('drill-how').textContent = drill.how;
+  document.getElementById('levelup-body').textContent = drill.levelUp;
+  document.getElementById('beginner-body').textContent = drill.beginner;
+
+  // Back button visibility
+  document.getElementById('drill-back-btn').style.display = index === 0 ? 'none' : '';
+
+  // Close expandables
+  document.getElementById('levelup-body').classList.remove('open');
+  document.getElementById('beginner-body').classList.remove('open');
+  document.getElementById('levelup-icon').classList.remove('open');
+  document.getElementById('beginner-icon').classList.remove('open');
+
+  // Timer
+  stopTimer();
+  setTimer(drill.duration * 60);
+}
+
+function nextDrill() {
+  stopTimer();
+  const next = state.currentBlock + 1;
+  if (next >= state.session.length) { showComplete(); return; }
+  showDrill(next);
+  window.scrollTo(0, 0);
+}
+
+function skipDrill() { nextDrill(); }
+
+function prevDrill() {
+  if (state.currentBlock <= 0) return;
+  stopTimer();
+  showDrill(state.currentBlock - 1);
+  window.scrollTo(0, 0);
+}
+
+// ─── TIMER ────────────────────────────────────────────────────────────────────
+const CIRCUMFERENCE = 2 * Math.PI * 68; // 427.26
+
+function setTimer(seconds) {
+  state.timer.remaining = seconds;
+  state.timer.total = seconds;
+  state.timer.running = false;
+  updateTimerDisplay();
+  updateTimerRing(1);
+  document.getElementById('timer-toggle').textContent = '▶ Start';
+  document.getElementById('timer-toggle').classList.remove('running');
+}
+
+function toggleTimer() {
+  if (state.timer.running) { pauseTimer(); } else { runTimer(); }
+}
+
+function runTimer() {
+  state.timer.running = true;
+  document.getElementById('timer-toggle').textContent = '⏸ Pause';
+  document.getElementById('timer-toggle').classList.add('running');
+  state.timer.interval = setInterval(() => {
+    state.timer.remaining--;
+    updateTimerDisplay();
+    updateTimerRing(state.timer.remaining / state.timer.total);
+    if (state.timer.remaining <= 0) {
+      stopTimer();
+      timerComplete();
+    }
+  }, 1000);
+}
+
+function pauseTimer() {
+  clearInterval(state.timer.interval);
+  state.timer.running = false;
+  document.getElementById('timer-toggle').textContent = '▶ Resume';
+  document.getElementById('timer-toggle').classList.remove('running');
+}
+
+function stopTimer() {
+  clearInterval(state.timer.interval);
+  state.timer.running = false;
+  document.getElementById('timer-toggle').textContent = '▶ Start';
+  document.getElementById('timer-toggle').classList.remove('running');
+}
+
+function resetTimer() {
+  stopTimer();
+  const drill = state.session[state.currentBlock];
+  if (drill) setTimer(drill.duration * 60);
+}
+
+function updateTimerDisplay() {
+  const m = Math.floor(state.timer.remaining / 60);
+  const s = state.timer.remaining % 60;
+  document.getElementById('timer-display').textContent =
+    String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+}
+
+function updateTimerRing(fraction) {
+  const fill = document.getElementById('timer-ring-fill');
+  const offset = CIRCUMFERENCE * (1 - Math.max(0, fraction));
+  fill.style.strokeDashoffset = offset;
+  fill.style.stroke = fraction > 0.33 ? '#f97316' : fraction > 0.1 ? '#f59e0b' : '#ef4444';
+}
+
+function timerComplete() {
+  if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+  // Simple audio beep
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    [0, 0.15, 0.3].forEach(t => {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.frequency.value = 880;
+      g.gain.setValueAtTime(0.3, ctx.currentTime + t);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + t + 0.12);
+      o.start(ctx.currentTime + t);
+      o.stop(ctx.currentTime + t + 0.12);
+    });
+  } catch(e) {}
+  updateTimerRing(0);
+  document.getElementById('timer-toggle').textContent = '✓ Done';
+}
+
+// ─── EXPANDABLE SECTIONS ─────────────────────────────────────────────────────
+function toggleExpand(id) {
+  const body = document.getElementById(id + '-body');
+  const icon = document.getElementById(id + '-icon');
+  body.classList.toggle('open');
+  icon.classList.toggle('open');
+}
+
+// ─── COMPLETE + HISTORY ───────────────────────────────────────────────────────
+function showComplete() {
+  stopTimer();
+  state.rating = null;
+  document.querySelectorAll('.rating-btn').forEach(b => b.classList.remove('selected'));
+
+  const totalMin = state.session.reduce((s, d) => s + d.duration, 0);
+  document.getElementById('complete-sub').textContent =
+    `${state.players} players · ${totalMin} minutes`;
+  document.getElementById('complete-drills').innerHTML =
+    state.session.map(d => `• ${d.name}`).join('<br>');
+
+  showScreen('complete');
+}
+
+function selectRating(emoji, el) {
+  document.querySelectorAll('.rating-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  state.rating = emoji;
+}
+
+function saveSession() {
+  const history = JSON.parse(localStorage.getItem('bball-history') || '[]');
+  const entry = {
+    date: new Date().toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' }),
+    players: state.players,
+    energy: state.energy,
+    focus: state.focus === 'random' ? 'Mixed' : state.focus,
+    drills: state.session.map(d => d.name),
+    rating: state.rating || '😊',
+    duration: state.session.reduce((s, d) => s + d.duration, 0)
+  };
+  history.unshift(entry);
+  if (history.length > 30) history.pop();
+  localStorage.setItem('bball-history', JSON.stringify(history));
+  showScreen('home');
+}
+
+function showHistory() {
+  const history = JSON.parse(localStorage.getItem('bball-history') || '[]');
+  const list = document.getElementById('history-list');
+  if (!history.length) {
+    list.innerHTML = `<div class="empty-state"><div class="empty-icon">📋</div>No sessions yet.<br>Complete your first session to see it here.</div>`;
+    return;
+  }
+  const focusLabel = f => f === 'random' ? 'Mixed' : f.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase());
+  list.innerHTML = history.map(h => `
+    <div class="history-item">
+      <div class="history-item-header">
+        <div class="history-date">${h.date}</div>
+        <div class="history-rating">${h.rating}</div>
+      </div>
+      <div class="history-details">${h.players} players · ${focusLabel(h.focus || 'Mixed')} · ${h.duration} min</div>
+      <div class="history-drills">${(h.drills || []).join(' · ')}</div>
+    </div>
+  `).join('');
+}
+
+// ─── YOUTUBE LINKS ────────────────────────────────────────────────────────────
+const DRILL_YT = {
+  'w-dribble-walk':      'https://www.youtube.com/watch?v=wX9RmYxL2W8',
+  'w-layup-lines':       'https://www.youtube.com/watch?v=vq16gUY8gzs',
+  'w-passing-walk':      'https://www.youtube.com/watch?v=Gsxfbk0_bsY',
+  's-spot-shooting':     'https://www.youtube.com/watch?v=Ae_yfNeo12c',
+  's-horse':             'https://www.youtube.com/watch?v=aUh_hQ8DFN8',
+  's-around-world':      'https://www.youtube.com/watch?v=m9H75EMvoOI',
+  's-21':                'https://www.youtube.com/watch?v=7gydpB03TCY',
+  's-bh-circuit':        'https://www.youtube.com/watch?v=1zRQwaN96rk',
+  's-dribble-tag':       'https://www.youtube.com/watch?v=Y7Bnc3T-S8o',
+  's-monkey':            'https://www.youtube.com/watch?v=RZdEc-F540Q',
+  's-3man-weave':        'https://www.youtube.com/watch?v=glc6aHFYHNk',
+  's-closeout':          'https://www.youtube.com/watch?v=txbEGCy15nI',
+  's-mirror':            'https://www.youtube.com/watch?v=iZRP7KegKf4',
+  's-mikan':             'https://www.youtube.com/watch?v=_VcY9M49JAs',
+  's-drive-finish':      'https://www.youtube.com/watch?v=XiP00ajy1tw',
+  'f-knockout':          'https://www.youtube.com/watch?v=4fi6p_jGaoo',
+  'f-21-game':           'https://www.youtube.com/watch?v=7gydpB03TCY',
+  'c-stretch-debrief':   'https://www.youtube.com/watch?v=RMTV4LO3A-I',
+};
+
+const PLAY_YT = {
+  'pick-roll':   'https://www.youtube.com/watch?v=Xe_6gGLKyoU',
+  'give-go':     'https://www.youtube.com/watch?v=LOL5ZNuP7vk',
+  'hand-off':    'https://www.youtube.com/watch?v=tFmIHooE29M',
+  'backdoor':    'https://www.youtube.com/watch?v=BdQscMMm-bg',
+  'kickout-3':   'https://www.youtube.com/watch?v=BJRvLqHhX7w',
+  'horns':       'https://www.youtube.com/watch?v=CAcoZx7-JPs',
+  'motion':      'https://www.youtube.com/watch?v=aRzLO-yLdU0',
+};
+
+function ytBtn(url) {
+  if (!url) return '';
+  return `<a href="${url}" target="_blank" class="yt-btn">▶ Watch on YouTube</a>`;
+}
+
+// ─── COURT SVG HELPERS ────────────────────────────────────────────────────────
+const _COURT = `<rect width="280" height="200" fill="#0a1a0a" rx="8"/>
+<rect x="96" y="100" width="88" height="82" fill="none" stroke="#1a3a1a" stroke-width="1.5"/>
+<circle cx="140" cy="100" r="44" fill="none" stroke="#1a3a1a" stroke-width="1.5"/>
+<line x1="96" y1="100" x2="184" y2="100" stroke="#2a5a2a" stroke-width="1.5"/>
+<circle cx="140" cy="170" r="9" fill="none" stroke="#f97316" stroke-width="2"/>
+<line x1="122" y1="181" x2="158" y2="181" stroke="#f97316" stroke-width="2"/>
+<path d="M 30,170 A 110,110 0 0,0 250,170" fill="none" stroke="#1a3a1a" stroke-width="1.5"/>
+<line x1="30" y1="170" x2="30" y2="192" stroke="#1a3a1a" stroke-width="1.5"/>
+<line x1="250" y1="170" x2="250" y2="192" stroke="#1a3a1a" stroke-width="1.5"/>`;
+
+function _P(x,y,n,c='#f97316'){
+  return `<circle cx="${x}" cy="${y}" r="13" fill="${c}"/><text x="${x}" y="${y+5}" text-anchor="middle" fill="#fff" font-size="11" font-weight="800" font-family="sans-serif">${n}</text>`;
+}
+function _A(x1,y1,x2,y2,col,dash=false){
+  const a=Math.atan2(y2-y1,x2-x1),s=15;
+  const sx=(x1+Math.cos(a)*s).toFixed(0), sy=(y1+Math.sin(a)*s).toFixed(0);
+  const ex=(x2-Math.cos(a)*s).toFixed(0), ey=(y2-Math.sin(a)*s).toFixed(0);
+  const p1x=(+ex-Math.cos(a-.45)*10).toFixed(0), p1y=(+ey-Math.sin(a-.45)*10).toFixed(0);
+  const p2x=(+ex-Math.cos(a+.45)*10).toFixed(0), p2y=(+ey-Math.sin(a+.45)*10).toFixed(0);
+  return `<line x1="${sx}" y1="${sy}" x2="${ex}" y2="${ey}" stroke="${col}" stroke-width="${dash?'2':'2.5'}" ${dash?'stroke-dasharray="6,4"':''}/>
+<polygon points="${ex},${ey} ${p1x},${p1y} ${p2x},${p2y}" fill="${col}"/>`;
+}
+function _pass(x1,y1,x2,y2){return _A(x1,y1,x2,y2,'#60a5fa',true);}
+function _drive(x1,y1,x2,y2){return _A(x1,y1,x2,y2,'#fbbf24',false);}
+function _cut(x1,y1,x2,y2){return _A(x1,y1,x2,y2,'#4ade80',false);}
+function _S(x,y,h=false){
+  return h ? `<line x1="${x-13}" y1="${y}" x2="${x+13}" y2="${y}" stroke="#e2e8f0" stroke-width="4" stroke-linecap="round"/>`
+           : `<line x1="${x}" y1="${y-13}" x2="${x}" y2="${y+13}" stroke="#e2e8f0" stroke-width="4" stroke-linecap="round"/>`;
+}
+function _SVG(inner){
+  return `<svg viewBox="0 0 280 200" width="100%" xmlns="http://www.w3.org/2000/svg" style="display:block;border-radius:8px;">${_COURT}${inner}</svg>`;
+}
+
+// ─── PLAYS LIBRARY ────────────────────────────────────────────────────────────
+const PLAYS = [
+{
+  id:'pick-roll', name:'Pick & Roll', icon:'🔄', minP:2, category:'2-Person',
+  tagline:'The most universal play in basketball',
+  whenToCall:'When your defender is playing tight and is slow to switch. Or when the screener\'s defender sags off and gives up the roll.',
+  keys:['O2 must set feet before screening — moving screen is a foul','O1 goes shoulder-to-shoulder with the screen, not 2 feet away','O2 rolls to basket immediately after O1 uses the screen','O1 reads the defense: if the defender chases → drive; if they switch → pass to O2'],
+  drill:'Walk it first: O2 sets screen (arms crossed), O1 dribbles off, O2 rolls. Say "set… go" together. 10 reps slow → 10 at game speed → add a passive defender on O1 → live 2v1 (defender picks one to guard).',
+  levelUp:'Add a real defender on the ball. O1 must choose in real time: pull-up off the screen, drive, or bounce pass to the rolling O2.',
+  beginner:'Start without any defense. Just build the timing: O2 walks up and plants feet, O1 dribbles by. Repeat until it feels natural before adding speed.',
+  svg: _SVG(
+    _drive(140,42,166,82)+_cut(112,70,137,150)+_S(112,70)+
+    _P(140,42,'1')+_P(108,105,'2')
+  )
+},
+{
+  id:'give-go', name:'Give & Go', icon:'↩️', minP:2, category:'2-Person',
+  tagline:'Pass and immediately cut — the simplest way to create a layup',
+  whenToCall:'When your defender relaxes after you pass the ball, they\'re not expecting you to move. The give-and-go punishes lazy defenders.',
+  keys:['Pass first, then attack — don\'t wait after the pass','Cut hard and fast, not a slow jog','O2 must be ready to pass back immediately — hold the ball, eyes on the cutter','Aim your cut for the basket, not just "toward the key"'],
+  drill:'Start slow: O1 passes, O1 counts "1" then cuts, O2 returns pass. 10 reps → add timing: O1 must cut within 1 second of passing → 5 reps vs passive defender.',
+  levelUp:'O1 does a jab step first (faking away) then cuts in the opposite direction. Forces the defender to commit before the cut.',
+  beginner:'Say the word "go" as you make your cut so O2 knows you\'re moving. This makes the timing obvious and reduces hesitation.',
+  svg: _SVG(
+    _pass(98,58,175,75)+_cut(98,58,130,150)+_pass(175,75,127,148)+
+    _P(98,58,'1')+_P(175,75,'2')
+  )
+},
+{
+  id:'hand-off', name:'Dribble Hand Off', icon:'🤝', minP:2, category:'2-Person',
+  tagline:'Like a moving screen — the receiver gets a free path to drive',
+  whenToCall:'When O2\'s defender is slow to react to motion, or when the defender tries to fight through too aggressively (creating a foul opportunity).',
+  keys:['O1 dribbles toward O2 — O2 doesn\'t come to the ball, O1 comes to O2','O2 times the catch with a step into the drive — no hesitation','O1 can fake the hand off and keep dribbling (a "ghost" screen) if the timing is off','O1 creates spacing after the hand off — don\'t clog the lane'],
+  drill:'O1 dribbles to the wing, O2 cuts in from the corner, meets at the hand-off point. O2 drives to basket. 10 reps each side → O2 can choose: take it to basket OR pull up for mid-range.',
+  levelUp:'Add a third player in the corner — O2 kicks out to them instead of driving, if the lane is closed.',
+  beginner:'Focus on the timing: O2 shouldn\'t arrive early and stand waiting. Time your cut to arrive right as O1 gets there.',
+  svg: _SVG(
+    _drive(140,42,100,80)+_cut(52,90,98,80)+_drive(100,80,118,150)+_cut(140,42,185,65)+
+    _P(140,42,'1')+_P(52,90,'2')
+  )
+},
+{
+  id:'backdoor', name:'Backdoor Cut', icon:'🚪', minP:2, category:'2-Person',
+  tagline:'Counter when your defender overplays the passing lane',
+  whenToCall:'When your defender is reaching or jumping the passing lane. If a defender is in your hip pocket, they\'ve given up the backdoor. Call "back" to signal O1 to hold the pass.',
+  keys:['Take a strong step TOWARD the ball first (the fake) — this sells the cut','Then explode in the opposite direction toward the basket','O1 must hold the ball and wait for the cut — don\'t force the pass early','O1 hits the cutter in stride — don\'t throw ahead of them'],
+  drill:'O2 starts at the wing. O1 at the top. O2 takes 1-2 steps toward O1, then cuts hard to the basket. O1 passes to them in stride. Catch and finish layup. 10 reps each side. Then add a passive defender on O2.',
+  levelUp:'Add a real defender on O2. Have the defender actively overplay — O2 must read when they\'re being overplayed and trigger the cut.',
+  beginner:'The fake step is everything. Without a convincing fake toward the ball, the defender doesn\'t commit and there\'s no open lane.',
+  svg: _SVG(
+    _cut(52,90,55,68)+_cut(55,68,125,148)+_pass(140,42,122,146)+
+    _P(140,42,'1')+_P(52,90,'2')
+  )
+},
+{
+  id:'kickout-3', name:'Kick-Out for 3', icon:'🎯', minP:3, category:'3-Person',
+  tagline:'Drive to collapse the defense, then find the open shooter',
+  whenToCall:'When you have size or speed advantage on your defender and you can get into the paint. Requires shooters in the corners who stay ready.',
+  keys:['Corners must have hands ready BEFORE the drive — if you catch flat-footed you won\'t get the shot off','Driver: once in the paint, read which corner defender left first','Pass early — don\'t wait until you\'re trapped','Corner shooter: catch, set your feet, shoot. One dribble is too slow.'],
+  drill:'O2 and O3 stand in opposite corners. O1 drives from the top. Passive: O1 always kicks to O2 (left corner). Live: O1 reads and kicks to whoever is more open. 15 reps, then add a third defender.',
+  levelUp:'Add two live defenders on O2 and O3. Now the corner players must move to create space before the kick-out arrives.',
+  beginner:'If you\'re in the corner, your only job is to be ready. Feet set, hands up, eyes on the driver at all times.',
+  svg: _SVG(
+    _drive(140,42,140,118)+_pass(140,118,32,162)+_pass(140,118,248,162)+
+    _P(140,42,'1')+_P(28,160,'2')+_P(252,160,'3')
+  )
+},
+{
+  id:'horns', name:'Horns Set', icon:'🤘', minP:4, category:'4-5 Person',
+  tagline:'Multiple reads from one set — works at any level',
+  whenToCall:'After a timeout or dead ball. When you need a set play with clear reads. The horns alignment (two bigs at elbows) creates options for everyone.',
+  keys:['O1 passes to one elbow (O2 or O3) to start — choose based on which side is open','O3 sets a back-screen for O4 on the opposite side — timing is everything','O4 cuts backdoor off that screen — cut baseline under the basket','O2 reads: pass to cutting O4 OR drive if their defender helps on the screen'],
+  drill:'Walk through each role without defense. O1 passes to O2, O3 sets backscreen, O4 cuts. No defense until everyone knows their job. Then add passive defenders. Then live.',
+  levelUp:'Add a second action: if O4\'s cut is covered, O5 pops to the corner for a kick-out 3.',
+  beginner:'Know your role before the play starts. In training, call out what you\'re doing ("screening now", "cutting now") so everyone can adjust.',
+  svg: _SVG(
+    _pass(140,42,100,102)+_S(180,122,true)+_cut(28,160,128,150)+_pass(100,102,125,148)+
+    _P(140,42,'1')+_P(100,102,'2')+_P(180,102,'3')+_P(28,160,'4')+_P(252,160,'5')
+  )
+},
+{
+  id:'motion', name:'Motion Offense', icon:'🌀', minP:4, category:'4-5 Person',
+  tagline:'The principle: pass and cut, then fill. Creates constant movement.',
+  whenToCall:'This isn\'t a specific play — it\'s the default offense. Run it when there\'s no set play called. Everyone knows the rule: if you pass, you move.',
+  keys:['After every pass, the passer either cuts to the basket OR sets a screen — never just stands still','Players without the ball fill empty spots — if your teammate cuts, you slide into their space','Ball movement beats defender movement — keep it moving','If nothing opens from the cut, space out and reset'],
+  drill:'3-pass minimum before shooting. Everyone counts aloud. If someone catches and immediately shoots without 3 team passes, redo the possession. This forces movement.',
+  levelUp:'Add the rule: must score off a pass from a cutter. No pull-up shots — the assist must come from movement.',
+  beginner:'Just remember one rule: whenever you pass, immediately cut toward the basket. That alone makes a huge difference.',
+  svg: _SVG(
+    _pass(140,42,52,90)+_cut(140,42,118,138)+_cut(228,90,143,44)+_cut(252,160,230,92)+
+    _P(140,42,'1')+_P(52,90,'2')+_P(228,90,'3')+_P(28,158,'4')+_P(252,158,'5')
+  )
+}
+];
+
+// ─── PLAYS NAVIGATION ─────────────────────────────────────────────────────────
+const PLAY_ICONS = {
+  '2-Person':'👥', '3-Person':'👥', '4-5 Person':'🏀'
+};
+
+function showPlays() {
+  const cats = [...new Set(PLAYS.map(p => p.category))];
+  let html = '';
+  cats.forEach(cat => {
+    html += `<div class="plays-cat-label">${PLAY_ICONS[cat]||''} ${cat} Plays</div>`;
+    PLAYS.filter(p => p.category === cat).forEach(play => {
+      html += `<div class="play-card" onclick="showPlayDetail('${play.id}')">
+        <div class="play-card-icon">${play.icon}</div>
+        <div class="play-card-body">
+          <div class="play-card-name">${play.name}</div>
+          <div class="play-card-sub">${play.tagline}</div>
+        </div>
+        <div class="play-card-arrow">›</div>
+      </div>`;
+    });
+  });
+  document.getElementById('plays-list').innerHTML = html;
+}
+
+function showPlayDetail(id) {
+  const play = PLAYS.find(p => p.id === id);
+  if (!play) return;
+  document.getElementById('play-detail-title').textContent = play.name;
+  document.getElementById('play-detail-pills').innerHTML =
+    `<div class="play-pill">${play.category}</div>
+     <div class="play-pill play-pill-blue">Min. ${play.minP} players</div>`;
+  document.getElementById('play-detail-svg').innerHTML = play.svg;
+  document.getElementById('play-yt').innerHTML = ytBtn(PLAY_YT[play.id]);
+  document.getElementById('play-when').textContent = play.whenToCall;
+  document.getElementById('play-keys').innerHTML = play.keys.map(k=>`<li>${k}</li>`).join('');
+  document.getElementById('play-drill').textContent = play.drill;
+  document.getElementById('play-levelup-body').textContent = play.levelUp;
+  document.getElementById('play-beginner-body').textContent = play.beginner;
+  // Close expandables
+  ['play-levelup','play-beginner'].forEach(id => {
+    document.getElementById(id+'-body').classList.remove('open');
+    document.getElementById(id+'-icon').classList.remove('open');
+  });
+  showScreen('play-detail');
+}
+
+// ─── OVERRIDE SHOWSCREEN ──────────────────────────────────────────────────────
+// Override showScreen to run history logic
+const _showScreen = showScreen;
+window.showScreen = function(name) {
+  _showScreen(name);
+  if (name === 'history') showHistory();
+  if (name === 'plays') showPlays();
+};
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js');
+  });
+}
+</script>
+</body>
+</html>
